@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#409EFF</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="color1">#0F766E</color>
+    <color name="color2">#64748B</color>
+    <color name="gray">#BEBEBE</color>
+    <color name="terminal_navy">#102333</color>
+    <color name="header_muted">#B8C6D1</color>
+    <color name="teal_primary">#087F72</color>
+    <color name="surface">#F3F6F8</color>
+    <color name="control_surface">#E8EEF2</color>
+    <color name="ink">#172B3A</color>
+    <color name="muted_ink">#667887</color>
+    <color name="line">#DCE4E9</color>
+    <color name="mint_surface">#EAF5F2</color>
+    <color name="launcher_icon_background">#F2F5F8</color>
+</resources>
