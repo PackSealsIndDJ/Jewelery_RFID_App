@@ -1,6 +1,5 @@
 package com.pda.uhfdemo.fragment.sixb;
 
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.coder.zzq.smartshow.dialog.DialogBtnClickListener;
 import com.coder.zzq.smartshow.dialog.EnsureDialog;
@@ -18,16 +18,16 @@ import com.pda.uhfdemo.R;
 import com.pda.uhfdemo.adapter.BindAdapter;
 import com.pda.uhfdemo.entity.BindInfo;
 import com.pda.uhfdemo.entity.TagInfo;
+import com.pda.uhfdemo.utils.BindingStore;
 import com.pda.uhfdemo.utils.Toast;
-import com.tencent.mmkv.MMKV;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,13 +44,18 @@ public class BindFragment6b extends Fragment {
     EditText bind_name;
     @BindView(R.id.bind_listView)
     RecyclerView bindListView;
-
-    MMKV mmkv = MMKV.defaultMMKV();
+    @BindView(R.id.bind_new_count)
+    TextView newCountView;
+    @BindView(R.id.bind_duplicate_count)
+    TextView duplicateCountView;
+    @BindView(R.id.bind_total_count)
+    TextView totalCountView;
 
     BindAdapter bindAdapter;
 
     List<BindInfo> bindInfoList = new ArrayList<>();
     LinkedHashMap<String, BindInfo> bindMap = new LinkedHashMap<>();
+    List<String> scannedIds = new ArrayList<>();
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_bind_6b, container, false);
@@ -61,12 +66,8 @@ public class BindFragment6b extends Fragment {
     }
 
     private void initAdapter() {
-        if (mmkv.allKeys() != null) {
-            for (String key : mmkv.allKeys()) {
-                if (!key.startsWith("set")) {
-                    bindMap.put(key, new BindInfo(key, mmkv.decodeString(key)));
-                }
-            }
+        for (BindInfo binding : BindingStore.loadBindInfo()) {
+            bindMap.put(binding.getEpc(), binding);
         }
         bindInfoList.addAll(bindMap.values());
         bindAdapter = new BindAdapter(bindInfoList);
@@ -75,16 +76,23 @@ public class BindFragment6b extends Fragment {
         bindListView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
         bindListView.setLayoutManager(layoutManager);
         bindListView.setAdapter(bindAdapter);
+        updateCounts();
     }
 
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void setData(List<TagInfo> tagInfoList) {
-        List<TagInfo> notEmptyList = tagInfoList.stream().filter(tagInfo -> !StringUtils.isNullOfEmpty(tagInfo.getEpc())).collect(Collectors.toList());
-        List<String> collect = notEmptyList.stream().map(TagInfo::getEpc).collect(Collectors.toList());
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_spinner_item, collect);
+        LinkedHashSet<String> ids = new LinkedHashSet<>();
+        for (TagInfo tagInfo : tagInfoList) {
+            if (tagInfo != null && !StringUtils.isNullOfEmpty(tagInfo.getEpc())) {
+                ids.add(tagInfo.getEpc().trim());
+            }
+        }
+        scannedIds.clear();
+        scannedIds.addAll(ids);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new ArrayList<>(ids));
 //        Adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bind_tid.setAdapter(adapter);
+        updateCounts();
     }
 
     public void selectData(int position) {
@@ -97,19 +105,43 @@ public class BindFragment6b extends Fragment {
             Toast.show(getString(R.string.bind_hint_1));
             return;
         }
-        if (StringUtils.isNullOfEmpty(bind_name.getText().toString())) {
+        String name = bind_name.getText().toString().trim();
+        if (StringUtils.isNullOfEmpty(name)) {
             Toast.show(getString(R.string.bind_hint_2));
             return;
         }
 
-        String tid = bind_tid.getSelectedItem().toString();
-        String name = bind_name.getText().toString();
-        mmkv.encode(tid, name);
+        String tid = bind_tid.getSelectedItem().toString().trim();
+        if (BindingStore.contains(tid)) {
+            Toast.show(getString(R.string.bind_duplicate_error));
+            return;
+        }
+        if (!BindingStore.save(tid, name)) {
+            Toast.show(getString(R.string.bind_save_error));
+            return;
+        }
         bindMap.put(tid, new BindInfo(tid, name));
         bindInfoList.clear();
         bindInfoList.addAll(bindMap.values());
         bindAdapter.notifyDataSetChanged();
+        updateCounts();
         Toast.show(getString(R.string.bind_hint_3));
+    }
+
+    private void updateCounts() {
+        int duplicates = 0;
+        int newlyScanned = 0;
+        Map<String, String> bindings = BindingStore.load();
+        for (String id : scannedIds) {
+            if (bindings.containsKey(id)) {
+                duplicates++;
+            } else {
+                newlyScanned++;
+            }
+        }
+        newCountView.setText(getString(R.string.bind_new_count, newlyScanned));
+        duplicateCountView.setText(getString(R.string.bind_duplicate_count, duplicates));
+        totalCountView.setText(getString(R.string.bind_total_count, bindings.size()));
     }
 
     @OnClick(R.id.bind_clean)
@@ -120,12 +152,10 @@ public class BindFragment6b extends Fragment {
         ensureDialog.confirmBtn(getString(R.string.bind_hint_6), new DialogBtnClickListener() {
             @Override
             public void onBtnClick(SmartDialog dialog, int which, Object data) {
-                if (mmkv.allKeys() != null) {
-                    for (String key : mmkv.allKeys()) {
-                        if (!key.startsWith("set")) {
-                            mmkv.remove(key);
-                        }
-                    }
+                if (!BindingStore.removeAll()) {
+                    Toast.show(getString(R.string.bind_save_error));
+                    dialog.dismiss();
+                    return;
                 }
                 bindInfoList.clear();
                 bindMap.clear();

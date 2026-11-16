@@ -4,6 +4,7 @@ public class BindInfo {
 
     private String epc;
     private String name;
+    private String status;
 
     public BindInfo() {
     }
@@ -27,5 +28,13 @@ public class BindInfo {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
