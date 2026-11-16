@@ -320,7 +320,7 @@
 
     <string-array name="write_area_gb">
         <item>EPC</item>
-        <item>安全区</item>
+        <item>Safe area</item>
         <item>UserChild0</item>
         <item>UserChild1</item>
         <item>UserChild2</item>

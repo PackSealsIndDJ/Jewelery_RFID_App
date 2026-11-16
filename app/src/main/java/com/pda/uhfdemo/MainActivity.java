@@ -111,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         button.setText(mmkv.decodeBool("scan_single_mode", false) ? "Mode: Single" : "Mode: Bulk");
     }
 
-    //加载所有的Fragment
+    // Load all fragments
     private void load6cFragments() {
         fragments.add(new ReadFragment6c());
         fragments.add(new BindFragment6c());
