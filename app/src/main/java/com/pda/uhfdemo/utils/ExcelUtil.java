@@ -1,6 +1,8 @@
 package com.pda.uhfdemo.utils;
 
 
+import android.content.Context;
+import android.net.Uri;
 import android.os.Environment;
 
 import com.pda.uhfdemo.entity.TagInfo;
@@ -9,6 +11,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -174,6 +177,50 @@ public class ExcelUtil {
             makeDir(dir.getParentFile());
         }
         dir.mkdir();
+    }
+
+    public static void writeTagsToUri(Context context, Uri uri, List<TagInfo> tags) throws IOException, WriteException {
+        format();
+        OutputStream os = context.getContentResolver().openOutputStream(uri);
+        if (os == null) {
+            throw new IOException("Cannot open output stream for " + uri);
+        }
+        WritableWorkbook workbook = Workbook.createWorkbook(os);
+        try {
+            WritableSheet sheet = workbook.createSheet("Tags", 0);
+            String[] colNames = new String[]{"Index", "Type", "EPC", "TID", "UserData", "Reserved", "Count", "ReadTime"};
+            sheet.addCell(new Label(0, 0, "Tag Export", arial14format));
+            for (int col = 0; col < colNames.length; col++) {
+                sheet.addCell(new Label(col, 1, colNames[col], arial10format));
+            }
+            sheet.setRowView(0, 340);
+            sheet.setRowView(1, 350);
+
+            if (tags != null) {
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
+                for (int i = 0; i < tags.size(); i++) {
+                    TagInfo info = tags.get(i);
+                    int row = i + 2;
+                    sheet.addCell(new Label(0, row, String.valueOf(info.getIndex()), arial12format));
+                    sheet.addCell(new Label(1, row, info.getType() != null ? info.getType() : "", arial12format));
+                    sheet.addCell(new Label(2, row, info.getEpc() != null ? info.getEpc() : "", arial12format));
+                    sheet.addCell(new Label(3, row, info.getTid() != null ? info.getTid() : "", arial12format));
+                    sheet.addCell(new Label(4, row, info.getUserData() != null ? info.getUserData() : "", arial12format));
+                    sheet.addCell(new Label(5, row, info.getReserved() != null ? info.getReserved() : "", arial12format));
+                    sheet.addCell(new Label(6, row, String.valueOf(info.getCount()), arial12format));
+                    String timeStr = info.getReadTime() != null ? dateFormat.format(info.getReadTime()) : "";
+                    sheet.addCell(new Label(7, row, timeStr, arial12format));
+                    sheet.setRowView(row, 350);
+                }
+            }
+            workbook.write();
+        } finally {
+            try {
+                workbook.close();
+            } catch (Exception ignored) {
+            }
+            os.close();
+        }
     }
 
 }
