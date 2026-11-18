@@ -137,6 +137,16 @@
         android:layout_height="wrap_content">
 
         <Button
+            android:id="@+id/bind_export"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/export_csv"
+            android:drawableStart="@android:drawable/ic_menu_save"
+            android:enabled="false"
+            android:textAllCaps="false"
+            android:layout_height="wrap_content"/>
+
+        <Button
             android:id="@+id/bind_clean"
             android:layout_width="0dp"
             android:layout_weight="1"

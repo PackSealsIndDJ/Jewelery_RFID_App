@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -18,6 +19,7 @@ import com.pda.uhfdemo.R;
 import com.pda.uhfdemo.adapter.BindAdapter;
 import com.pda.uhfdemo.entity.BindInfo;
 import com.pda.uhfdemo.entity.TagInfo;
+import com.pda.uhfdemo.fragment.CsvExportFragment;
 import com.pda.uhfdemo.utils.BindingStore;
 import com.pda.uhfdemo.utils.Toast;
 
@@ -28,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,7 +37,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class BindFragment6b extends Fragment {
+public class BindFragment6b extends CsvExportFragment {
 
     @BindView(R.id.bind_tid)
     Spinner bind_tid;
@@ -50,11 +51,14 @@ public class BindFragment6b extends Fragment {
     TextView duplicateCountView;
     @BindView(R.id.bind_total_count)
     TextView totalCountView;
+    @BindView(R.id.bind_export)
+    Button bindExportButton;
 
     BindAdapter bindAdapter;
 
     List<BindInfo> bindInfoList = new ArrayList<>();
     LinkedHashMap<String, BindInfo> bindMap = new LinkedHashMap<>();
+    LinkedHashMap<String, TagInfo> tagInfoById = new LinkedHashMap<>();
     List<String> scannedIds = new ArrayList<>();
 
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,14 +81,18 @@ public class BindFragment6b extends Fragment {
         bindListView.setLayoutManager(layoutManager);
         bindListView.setAdapter(bindAdapter);
         updateCounts();
+        updateExportButton();
     }
 
 
     public void setData(List<TagInfo> tagInfoList) {
         LinkedHashSet<String> ids = new LinkedHashSet<>();
+        tagInfoById.clear();
         for (TagInfo tagInfo : tagInfoList) {
             if (tagInfo != null && !StringUtils.isNullOfEmpty(tagInfo.getEpc())) {
-                ids.add(tagInfo.getEpc().trim());
+                String id = tagInfo.getEpc().trim();
+                ids.add(id);
+                tagInfoById.put(id, tagInfo);
             }
         }
         scannedIds.clear();
@@ -116,16 +124,26 @@ public class BindFragment6b extends Fragment {
             Toast.show(getString(R.string.bind_duplicate_error));
             return;
         }
-        if (!BindingStore.save(tid, name)) {
+        TagInfo scannedTag = tagInfoById.get(tid);
+        String exportedTid = scannedTag != null && !StringUtils.isNullOfEmpty(scannedTag.getTid())
+                ? scannedTag.getTid() : tid;
+        if (!BindingStore.save(tid, name, exportedTid)) {
             Toast.show(getString(R.string.bind_save_error));
             return;
         }
-        bindMap.put(tid, new BindInfo(tid, name));
+        bindMap.put(tid, new BindInfo(tid, name, exportedTid, System.currentTimeMillis()));
         bindInfoList.clear();
         bindInfoList.addAll(bindMap.values());
         bindAdapter.notifyDataSetChanged();
         updateCounts();
+        updateExportButton();
         Toast.show(getString(R.string.bind_hint_3));
+    }
+
+    private void updateExportButton() {
+        if (bindExportButton != null) {
+            bindExportButton.setEnabled(!bindInfoList.isEmpty());
+        }
     }
 
     private void updateCounts() {
@@ -144,6 +162,11 @@ public class BindFragment6b extends Fragment {
         totalCountView.setText(getString(R.string.bind_total_count, bindings.size()));
     }
 
+    @OnClick(R.id.bind_export)
+    public void exportBindings() {
+        exportBindDataToCsv(bindInfoList, true);
+    }
+
     @OnClick(R.id.bind_clean)
     public void bindClean() {
         EnsureDialog ensureDialog = new EnsureDialog();
@@ -160,6 +183,7 @@ public class BindFragment6b extends Fragment {
                 bindInfoList.clear();
                 bindMap.clear();
                 bindAdapter.notifyDataSetChanged();
+                updateExportButton();
                 dialog.dismiss();
             }
         });

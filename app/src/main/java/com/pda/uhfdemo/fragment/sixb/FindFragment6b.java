@@ -18,6 +18,7 @@ import com.gg.reader.api.protocol.gx.MsgBaseStop;
 import com.pda.uhfdemo.R;
 import com.pda.uhfdemo.adapter.FindAdapter;
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.fragment.CsvExportFragment;
 import com.pda.uhfdemo.utils.GlobalClient;
 import com.pda.uhfdemo.utils.BindingStore;
 import com.pda.uhfdemo.utils.Toast;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,13 +38,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-public class FindFragment6b extends Fragment {
+public class FindFragment6b extends CsvExportFragment {
 
 
     @BindView(R.id.find_listview)
     RecyclerView findListView;
     @BindView(R.id.find_btn)
     Button findBtn;
+    @BindView(R.id.find_export)
+    Button findExportButton;
     @BindView(R.id.find_radar)
     RadarView radarView;
     @BindView(R.id.find_radar_target)
@@ -113,6 +115,9 @@ public class FindFragment6b extends Fragment {
             if (info == null) return;
             newlyFound = !getString(R.string.find_status_found).equals(info.getStatus());
             info.setStatus(getString(R.string.find_status_found));
+            info.setRssi(rssi);
+            info.incrementScanCount();
+            info.setLastSeenMillis(System.currentTimeMillis());
             synchronized (signalById) {
                 signalById.put(id, rssi);
             }
@@ -123,6 +128,7 @@ public class FindFragment6b extends Fragment {
         activity.runOnUiThread(() -> {
             if (getView() == null || findAdapter == null) return;
             findAdapter.notifyDataSetChanged();
+            findExportButton.setEnabled(true);
             if (id.equals(targetId)) renderTarget();
         });
     }
@@ -135,13 +141,13 @@ public class FindFragment6b extends Fragment {
         synchronized (findMap) {
             findMap.clear();
             findInfoList.clear();
-            for (Map.Entry<String, String> entry : BindingStore.load().entrySet()) {
-                BindInfo info = new BindInfo(entry.getKey(), entry.getValue());
+            for (BindInfo info : BindingStore.loadBindInfo()) {
                 info.setStatus(getString(R.string.find_status_searching));
-                findMap.put(entry.getKey(), info);
+                findMap.put(info.getEpc(), info);
                 findInfoList.add(info);
             }
         }
+        findExportButton.setEnabled(false);
         targetId = findInfoList.isEmpty() ? null : findInfoList.get(0).getEpc();
         findAdapter.setTargetId(targetId);
         findAdapter.notifyDataSetChanged();
@@ -160,7 +166,19 @@ public class FindFragment6b extends Fragment {
             }
         }
         if (findAdapter != null) findAdapter.notifyDataSetChanged();
+        updateExportButton();
         renderTarget();
+    }
+
+    private void updateExportButton() {
+        if (findExportButton == null) return;
+        for (BindInfo info : findInfoList) {
+            if (getString(R.string.find_status_found).equals(info.getStatus())) {
+                findExportButton.setEnabled(true);
+                return;
+            }
+        }
+        findExportButton.setEnabled(false);
     }
 
     private void renderTarget() {
@@ -190,6 +208,13 @@ public class FindFragment6b extends Fragment {
         radarTrend.setText(radarView.getTrendLabel());
     }
 
+
+    @OnClick(R.id.find_export)
+    public void exportFindResults() {
+        synchronized (findMap) {
+            exportFindDataToCsv(findInfoList, getString(R.string.find_status_found), true);
+        }
+    }
 
     @OnClick(R.id.find_btn)
     public void findEvent() {
