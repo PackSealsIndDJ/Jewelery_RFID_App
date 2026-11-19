@@ -35,7 +35,8 @@ public final class CsvExportManager {
     private static final String TAG = "CsvExportManager";
     private static final String DOWNLOAD_DIRECTORY = "PackSealsUHF_G2";
     private static final String MIME_TYPE = "text/csv";
-    private static final String[] BIND_HEADERS = {"EPC", "TIP", "Bind Status", "Date Time"};
+    private static final String[] BIND_HEADERS =
+            {"New", "EPC", "Goods", "Total bound", "Date Time"};
     private static final String[] FIND_HEADERS = {"EPC", "TIP", "RSSI", "Scan Count", "Last Seen Time"};
     private static final ExecutorService EXPORT_EXECUTOR =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "csv-export"));
@@ -62,10 +63,10 @@ public final class CsvExportManager {
     }
 
     public static void exportBindDataToCsv(Context context, List<BindInfo> records,
-                                           boolean idIsTid, Callback callback) {
+                                           Callback callback) {
         List<BindInfo> snapshot = snapshot(records);
         String fileName = "Bind_Report_" + fileTimestamp() + ".csv";
-        executeExport(context, fileName, BIND_HEADERS, snapshot, idIsTid, null, false, callback);
+        executeExport(context, fileName, BIND_HEADERS, snapshot, false, null, false, callback);
     }
 
     public static void exportFindDataToCsv(Context context, List<BindInfo> records,
@@ -113,7 +114,7 @@ public final class CsvExportManager {
             try {
                 List<String[]> rows = findExport
                         ? buildFindRows(records, foundStatus, idIsTid)
-                        : buildBindRows(records, idIsTid);
+                        : buildBindRows(records);
                 if (rows.isEmpty()) {
                     throw new IOException("No records to export.");
                 }
@@ -193,13 +194,13 @@ public final class CsvExportManager {
         }
     }
 
-    static List<String[]> buildBindRows(List<BindInfo> records, boolean idIsTid) {
+    static List<String[]> buildBindRows(List<BindInfo> records) {
         List<String[]> rows = new ArrayList<>(records.size());
-        for (BindInfo record : records) {
-            String epc = idIsTid ? "" : record.getEpc();
-            String tid = idIsTid ? record.getEpc() : record.getTid();
-            rows.add(new String[]{epc, tid,
-                    record.getStatus() == null ? "Bound" : record.getStatus(),
+        int totalBound = records.size();
+        for (int i = 0; i < totalBound; i++) {
+            BindInfo record = records.get(i);
+            rows.add(new String[]{String.valueOf(i + 1), record.getEpc(), record.getName(),
+                    String.valueOf(totalBound),
                     record.getBoundAtMillis() > 0 ? dateTime(record.getBoundAtMillis()) : ""});
         }
         return rows;

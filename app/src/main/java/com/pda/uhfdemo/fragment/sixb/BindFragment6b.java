@@ -164,7 +164,7 @@ public class BindFragment6b extends CsvExportFragment {
 
     @OnClick(R.id.bind_export)
     public void exportBindings() {
-        exportBindDataToCsv(bindInfoList, true);
+        exportBindDataToCsv(bindInfoList);
     }
 
     @OnClick(R.id.bind_clean)

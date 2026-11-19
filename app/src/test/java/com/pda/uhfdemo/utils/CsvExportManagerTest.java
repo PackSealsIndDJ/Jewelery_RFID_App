@@ -30,18 +30,22 @@ public class CsvExportManagerTest {
     }
 
     @Test
-    public void bindRowsIncludePersistedTidStatusAndDateTime() {
+    public void bindRowsIncludeDisplayedFieldsAndCompleteListCounts() {
         BindInfo binding = new BindInfo("epc-1", "Gold ring", "tid-1", 1_700_000_000_000L);
+        BindInfo secondBinding = new BindInfo("epc-2", "Silver ring", "tid-2",
+                1_700_000_001_000L);
 
-        String[] row = CsvExportManager.buildBindRows(Collections.singletonList(binding), false).get(0);
+        List<String[]> rows = CsvExportManager.buildBindRows(
+                Arrays.asList(binding, secondBinding));
+        String[] row = rows.get(0);
 
-        assertEquals(Arrays.asList("epc-1", "tid-1", "Bound"),
-                Arrays.asList(row).subList(0, 3));
-        assertTrue(row[3].matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
+        assertEquals(Arrays.asList("1", "epc-1", "Gold ring", "2"),
+                Arrays.asList(row).subList(0, 4));
+        assertTrue(row[4].matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
 
-        String[] tidOnlyRow =
-                CsvExportManager.buildBindRows(Collections.singletonList(binding), true).get(0);
-        assertEquals(Arrays.asList("", "epc-1"), Arrays.asList(tidOnlyRow).subList(0, 2));
+        assertEquals(Arrays.asList("2", "epc-2", "Silver ring", "2"),
+                Arrays.asList(rows.get(1)).subList(0, 4));
+        assertTrue(rows.get(1)[4].matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
     }
 
     @Test

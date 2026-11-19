@@ -42,13 +42,13 @@ public abstract class CsvExportFragment extends Fragment {
                 }
             });
 
-    protected final void exportBindDataToCsv(List<BindInfo> records, boolean idIsTid) {
+    protected final void exportBindDataToCsv(List<BindInfo> records) {
         if (records == null || records.isEmpty()) {
             showNoData();
             return;
         }
         runWithStoragePermission(() -> CsvExportManager.exportBindDataToCsv(
-                requireContext(), records, idIsTid, exportCallback()));
+                requireContext(), records, exportCallback()));
     }
 
     protected final void exportFindDataToCsv(List<BindInfo> records, String foundStatus,
