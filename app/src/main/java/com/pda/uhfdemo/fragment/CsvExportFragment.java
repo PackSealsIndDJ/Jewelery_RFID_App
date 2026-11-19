@@ -51,14 +51,13 @@ public abstract class CsvExportFragment extends Fragment {
                 requireContext(), records, exportCallback()));
     }
 
-    protected final void exportFindDataToCsv(List<BindInfo> records, String foundStatus,
-                                              boolean idIsTid) {
+    protected final void exportFindDataToCsv(List<BindInfo> records, String foundStatus) {
         if (records == null || records.isEmpty()) {
             showNoData();
             return;
         }
         runWithStoragePermission(() -> CsvExportManager.exportFindDataToCsv(
-                requireContext(), records, foundStatus, idIsTid, exportCallback()));
+                requireContext(), records, foundStatus, exportCallback()));
     }
 
     private void runWithStoragePermission(Runnable export) {

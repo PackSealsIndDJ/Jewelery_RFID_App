@@ -37,7 +37,8 @@ public final class CsvExportManager {
     private static final String MIME_TYPE = "text/csv";
     private static final String[] BIND_HEADERS =
             {"New", "EPC", "Goods", "Total bound", "Date Time"};
-    private static final String[] FIND_HEADERS = {"EPC", "TIP", "RSSI", "Scan Count", "Last Seen Time"};
+    private static final String[] FIND_HEADERS =
+            {"EPC", "Goods", "RSSI", "Status", "Last Seen Time"};
     private static final ExecutorService EXPORT_EXECUTOR =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "csv-export"));
 
@@ -66,15 +67,14 @@ public final class CsvExportManager {
                                            Callback callback) {
         List<BindInfo> snapshot = snapshot(records);
         String fileName = "Bind_Report_" + fileTimestamp() + ".csv";
-        executeExport(context, fileName, BIND_HEADERS, snapshot, false, null, false, callback);
+        executeExport(context, fileName, BIND_HEADERS, snapshot, null, false, callback);
     }
 
     public static void exportFindDataToCsv(Context context, List<BindInfo> records,
-                                           String foundStatus, boolean idIsTid, Callback callback) {
+                                           String foundStatus, Callback callback) {
         List<BindInfo> snapshot = snapshot(records);
         String fileName = "Find_Report_" + fileTimestamp() + ".csv";
-        executeExport(context, fileName, FIND_HEADERS, snapshot, idIsTid,
-                foundStatus, true, callback);
+        executeExport(context, fileName, FIND_HEADERS, snapshot, foundStatus, true, callback);
     }
 
     public static void writeCsvHeaders(Writer writer, String[] headers) throws IOException {
@@ -102,8 +102,8 @@ public final class CsvExportManager {
     }
 
     private static void executeExport(Context context, String fileName, String[] headers,
-                                      List<BindInfo> records, boolean idIsTid,
-                                      String foundStatus, boolean findExport, Callback callback) {
+                                      List<BindInfo> records, String foundStatus,
+                                      boolean findExport, Callback callback) {
         if (context == null || callback == null) {
             throw new IllegalArgumentException("Context and callback are required.");
         }
@@ -113,7 +113,7 @@ public final class CsvExportManager {
             boolean committed = false;
             try {
                 List<String[]> rows = findExport
-                        ? buildFindRows(records, foundStatus, idIsTid)
+                        ? buildFindRows(records, foundStatus)
                         : buildBindRows(records);
                 if (rows.isEmpty()) {
                     throw new IOException("No records to export.");
@@ -206,25 +206,26 @@ public final class CsvExportManager {
         return rows;
     }
 
-    static List<String[]> buildFindRows(List<BindInfo> records, String foundStatus,
-                                        boolean idIsTid) {
+    static List<String[]> buildFindRows(List<BindInfo> records, String foundStatus) {
         LinkedHashMap<String, BindInfo> uniqueFoundTags = new LinkedHashMap<>();
         for (BindInfo record : records) {
-            if (foundStatus.equals(record.getStatus())) {
+            if (record != null && foundStatus != null && foundStatus.equals(record.getStatus())) {
                 String key = record.getEpc();
                 if (key != null && !key.isEmpty()) {
-                    uniqueFoundTags.put(key, record);
+                    BindInfo current = uniqueFoundTags.get(key);
+                    if (current == null
+                            || record.getLastSeenMillis() >= current.getLastSeenMillis()) {
+                        uniqueFoundTags.put(key, record);
+                    }
                 }
             }
         }
 
         List<String[]> rows = new ArrayList<>(uniqueFoundTags.size());
         for (BindInfo record : uniqueFoundTags.values()) {
-            String epc = idIsTid ? "" : record.getEpc();
-            String tid = idIsTid ? record.getEpc() : record.getTid();
-            rows.add(new String[]{epc, tid,
+            rows.add(new String[]{record.getEpc(), record.getName(),
                     record.getRssi() == null ? "" : String.valueOf(record.getRssi()),
-                    String.valueOf(record.getScanCount()),
+                    record.getStatus(),
                     record.getLastSeenMillis() > 0 ? dateTime(record.getLastSeenMillis()) : ""});
         }
         return rows;

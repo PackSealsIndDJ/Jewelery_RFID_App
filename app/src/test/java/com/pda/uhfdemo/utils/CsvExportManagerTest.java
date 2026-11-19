@@ -6,9 +6,12 @@ import com.pda.uhfdemo.entity.BindInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,20 +55,23 @@ public class CsvExportManagerTest {
     public void findRowsOnlyIncludeUniqueFoundTagsWithLatestScanValues() {
         BindInfo missing = new BindInfo("epc-1", "Missing");
         missing.setStatus("Missing");
-        BindInfo firstRead = foundTag("epc-2", -60, 1, 1_700_000_000_000L);
-        BindInfo latestRead = foundTag("epc-2", -42, 3, 1_700_000_001_000L);
+        BindInfo olderRead = foundTag("epc-2", "Old goods", -60, 1,
+                1_700_000_000_000L);
+        BindInfo latestRead = foundTag("epc-2", "Latest goods", -42, 3,
+                1_700_000_001_000L);
 
         List<String[]> rows = CsvExportManager.buildFindRows(
-                Arrays.asList(missing, firstRead, latestRead), "Found", false);
+                Arrays.asList(missing, latestRead, olderRead), "Found");
 
         assertEquals(1, rows.size());
-        assertEquals(Arrays.asList("epc-2", null, "-42", "3"),
+        assertEquals(Arrays.asList("epc-2", "Latest goods", "-42", "Found"),
                 Arrays.asList(rows.get(0)).subList(0, 4));
-        assertTrue(rows.get(0)[4].matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                .format(new Date(1_700_000_001_000L)), rows.get(0)[4]);
     }
 
-    private BindInfo foundTag(String epc, long rssi, int scanCount, long lastSeen) {
-        BindInfo info = new BindInfo(epc, "Goods");
+    private BindInfo foundTag(String epc, String goods, long rssi, int scanCount, long lastSeen) {
+        BindInfo info = new BindInfo(epc, goods);
         info.setStatus("Found");
         info.setRssi(rssi);
         for (int i = 0; i < scanCount; i++) {

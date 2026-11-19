@@ -217,7 +217,7 @@ public class FindFragmentGB extends CsvExportFragment {
     @OnClick(R.id.find_export)
     public void exportFindResults() {
         synchronized (findMap) {
-            exportFindDataToCsv(findInfoList, getString(R.string.find_status_found), false);
+            exportFindDataToCsv(findInfoList, getString(R.string.find_status_found));
         }
     }
 
