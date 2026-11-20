@@ -134,12 +134,30 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:orientation="horizontal"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/bind_export"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:minWidth="0dp"
+            android:text="@string/export_csv"
+            android:drawableStart="@android:drawable/ic_menu_save"
+            android:drawablePadding="4dp"
+            android:enabled="false"
+            android:textAllCaps="false"
+            android:layout_height="wrap_content"/>
 
         <Button
             android:id="@+id/bind_clean"
             android:layout_width="0dp"
             android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:minWidth="0dp"
             android:text="@string/clear_bind"
             android:textAllCaps="false"
             android:layout_height="wrap_content"/>
