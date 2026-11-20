@@ -154,6 +154,11 @@
         <item>Auto</item>
         <item>Fixed</item>
     </string-array>
+    <string-array name="encoded_memory_banks">
+        <item>User memory (TID fallback)</item>
+        <item>TID memory</item>
+        <item>Reserved memory (TID fallback)</item>
+    </string-array>
 
     <string-array name="setting_power">
         <item>0</item>

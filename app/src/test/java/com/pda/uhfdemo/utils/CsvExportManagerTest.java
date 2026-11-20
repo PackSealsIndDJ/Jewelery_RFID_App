@@ -3,6 +3,7 @@ package com.pda.uhfdemo.utils;
 import org.junit.Test;
 
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -68,6 +69,28 @@ public class CsvExportManagerTest {
                 Arrays.asList(rows.get(0)).subList(0, 4));
         assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
                 .format(new Date(1_700_000_001_000L)), rows.get(0)[4]);
+    }
+
+    @Test
+    public void tagRowsExportEncodedDataAndScanTimesInRequiredOrder() {
+        TagInfo tag = new TagInfo();
+        tag.setEpc("epc-1");
+        tag.setEncodedData("A1B2");
+        tag.setRssi("-48");
+        tag.setScanCount(3);
+        tag.setFirstScanTime(1_700_000_000_000L);
+        tag.setLastScanTime(1_700_000_002_000L);
+
+        assertEquals(Arrays.asList("Sr No", "EPC", "Encoded Data", "RSSI", "Scan Count",
+                        "First Scan Time", "Last Scan Time"),
+                Arrays.asList(CsvExportManager.getTagHeaders()));
+        String[] row = CsvExportManager.buildTagRows(Collections.singletonList(tag)).get(0);
+        assertEquals(Arrays.asList("1", "epc-1", "A1B2", "-48", "3"),
+                Arrays.asList(row).subList(0, 5));
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                .format(new Date(1_700_000_000_000L)), row[5]);
+        assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                .format(new Date(1_700_000_002_000L)), row[6]);
     }
 
     private BindInfo foundTag(String epc, String goods, long rssi, int scanCount, long lastSeen) {

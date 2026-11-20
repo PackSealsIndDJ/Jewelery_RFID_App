@@ -14,6 +14,7 @@ import android.util.Log;
 import androidx.core.content.FileProvider;
 
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -39,6 +40,9 @@ public final class CsvExportManager {
             {"New", "EPC", "Goods", "Total bound", "Date Time"};
     private static final String[] FIND_HEADERS =
             {"EPC", "Goods", "RSSI", "Status", "Last Seen Time"};
+    private static final String[] TAG_HEADERS =
+            {"Sr No", "EPC", "Encoded Data", "RSSI", "Scan Count",
+                    "First Scan Time", "Last Scan Time"};
     private static final ExecutorService EXPORT_EXECUTOR =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "csv-export"));
 
@@ -75,6 +79,17 @@ public final class CsvExportManager {
         List<BindInfo> snapshot = snapshot(records);
         String fileName = "Find_Report_" + fileTimestamp() + ".csv";
         executeExport(context, fileName, FIND_HEADERS, snapshot, foundStatus, true, callback);
+    }
+
+    public static void exportTagDataToCsv(Context context, List<TagInfo> records,
+                                          Callback callback) {
+        List<TagInfo> snapshot = snapshotTags(records);
+        String fileName = "RFID_Scan_Report_" + fileTimestamp() + ".csv";
+        executeTagExport(context, fileName, snapshot, callback);
+    }
+
+    public static String[] getTagHeaders() {
+        return TAG_HEADERS.clone();
     }
 
     public static void writeCsvHeaders(Writer writer, String[] headers) throws IOException {
@@ -231,6 +246,19 @@ public final class CsvExportManager {
         return rows;
     }
 
+    static List<String[]> buildTagRows(List<TagInfo> records) {
+        List<String[]> rows = new ArrayList<>(records.size());
+        for (int i = 0; i < records.size(); i++) {
+            TagInfo record = records.get(i);
+            rows.add(new String[]{String.valueOf(i + 1), record.getEpc(),
+                    record.getEncodedData(), record.getRssi(),
+                    String.valueOf(record.getScanCount()),
+                    record.getFirstScanTime() > 0 ? dateTime(record.getFirstScanTime()) : "",
+                    record.getLastScanTime() > 0 ? dateTime(record.getLastScanTime()) : ""});
+        }
+        return rows;
+    }
+
     private static List<BindInfo> snapshot(List<BindInfo> records) {
         List<BindInfo> snapshot = new ArrayList<>(records.size());
         for (BindInfo record : records) {
@@ -239,6 +267,49 @@ public final class CsvExportManager {
             }
         }
         return snapshot;
+    }
+
+    private static List<TagInfo> snapshotTags(List<TagInfo> records) {
+        List<TagInfo> snapshot = new ArrayList<>(records.size());
+        for (TagInfo record : records) {
+            if (record != null) {
+                snapshot.add(record.copy());
+            }
+        }
+        return snapshot;
+    }
+
+    private static void executeTagExport(Context context, String fileName,
+                                         List<TagInfo> records, Callback callback) {
+        if (context == null || callback == null) {
+            throw new IllegalArgumentException("Context and callback are required.");
+        }
+        Context appContext = context.getApplicationContext();
+        EXPORT_EXECUTOR.execute(() -> {
+            CsvDestination destination = null;
+            boolean committed = false;
+            try {
+                List<String[]> rows = buildTagRows(records);
+                if (rows.isEmpty()) {
+                    throw new IOException("No records to export.");
+                }
+                String exportedAt = dateTime(System.currentTimeMillis());
+                destination = createCsvFile(appContext, fileName);
+                writeCsv(destination.outputStream, TAG_HEADERS, rows, exportedAt, rows.size());
+                destination.publish(appContext);
+                committed = true;
+                ExportedFile result = new ExportedFile(destination.uri, destination.location, fileName);
+                int recordCount = rows.size();
+                postToMainThread(() -> callback.onSuccess(result, recordCount));
+            } catch (IOException | RuntimeException error) {
+                Log.e(TAG, "Tag CSV export failed", error);
+                postError(callback, error);
+            } finally {
+                if (!committed && destination != null) {
+                    destination.delete(appContext);
+                }
+            }
+        });
     }
 
     private static void writeCsvRow(Writer writer, String[] values) throws IOException {

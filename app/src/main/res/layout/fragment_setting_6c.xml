@@ -154,6 +154,24 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/encoded_memory_bank" />
+
+            <Spinner
+                android:id="@+id/encoded_memory_bank_spinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:entries="@array/encoded_memory_banks" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
             <CheckBox
                 android:id="@+id/set_tid_box"
                 android:layout_width="wrap_content"

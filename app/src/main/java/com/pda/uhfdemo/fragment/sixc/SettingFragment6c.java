@@ -50,6 +50,8 @@ public class SettingFragment6c extends Fragment {
 
     @BindView(R.id.set_tid_box)
     CheckBox set_tid_box;
+    @BindView(R.id.encoded_memory_bank_spinner)
+    Spinner encoded_memory_bank_spinner;
     @BindView(R.id.set_tid_mode)
     Spinner set_tid_mode;
     @BindView(R.id.set_tid_len)
@@ -154,6 +156,18 @@ public class SettingFragment6c extends Fragment {
     }
 
     private void initListener() {
+        encoded_memory_bank_spinner.setSelection(
+                mmkv.decodeInt("rfid_encoded_memory_bank", 0));
+        encoded_memory_bank_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
+                mmkv.encode("rfid_encoded_memory_bank", position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+            }
+        });
         set_tid_box.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {

@@ -33,7 +33,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -58,7 +57,8 @@ import com.pda.uhfdemo.UpgradeActivity;
 import com.pda.uhfdemo.adapter.TagAdapter;
 import com.pda.uhfdemo.entity.TagInfo;
 import com.pda.uhfdemo.fragment.sixc.BindFragment6c;
-import com.pda.uhfdemo.utils.ExcelUtil;
+import com.pda.uhfdemo.fragment.CsvExportFragment;
+import com.pda.uhfdemo.utils.BoundedScanQueue;
 import com.pda.uhfdemo.utils.GlobalClient;
 import com.pda.uhfdemo.utils.Toast;
 import com.pda.uhfdemo.utils.VoiceUtils;
@@ -77,7 +77,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-public class ReadFragmentTL extends Fragment {
+public class ReadFragmentTL extends CsvExportFragment {
 
     @BindView(R.id.inventory_btn)
     Button inventory_btn;
@@ -85,6 +85,12 @@ public class ReadFragmentTL extends Fragment {
     RecyclerView listView;
     @BindView(R.id.tagTotal)
     TextView tagTotal;
+    @BindView(R.id.tagUnique)
+    TextView tagUnique;
+    @BindView(R.id.tagEncodedSuccess)
+    TextView tagEncodedSuccess;
+    @BindView(R.id.tagEncodedFailures)
+    TextView tagEncodedFailures;
     @BindView(R.id.tagSpeed)
     TextView tagSpeed;
     @BindView(R.id.tagReadTime)
@@ -95,6 +101,8 @@ public class ReadFragmentTL extends Fragment {
     List<TagInfo> tagList = new ArrayList<>();
 
     final LinkedHashMap<String, TagInfo> tagMap = new LinkedHashMap<>();
+    private final BoundedScanQueue scanQueue = new BoundedScanQueue();
+    private volatile long scanGeneration;
 
     TagAdapter tagAdapter;
     View clickView;
@@ -138,21 +146,7 @@ public class ReadFragmentTL extends Fragment {
             public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
                     case R.id.menu_export:
-                        String filePath = Environment.getExternalStorageDirectory() + "/Download/";
-                        String fileName = "Tag_" + new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date()) + ".xls";
-                        String[] title = {"Index", "Type", "EPC", "TID", "UserData", "Reserved", "TotalCount", "ReadTime"};
-                        if (tagList.size() > 0) {
-                            try {
-                                ExcelUtil.initExcel(filePath, fileName, title);
-                                ExcelUtil.writeObjListToExcel(ExcelUtil.getRecordData(tagList), filePath + fileName);
-                                SmartToast.show("Export success " + "Path=" + filePath + fileName);
-                            } catch (Exception ex) {
-                                SmartToast.show("Export Failed");
-                                ex.printStackTrace();
-                            }
-                        } else {
-                            SmartToast.show("No Data");
-                        }
+                        exportTagDataToCsv(tagList);
                         break;
                     case R.id.menu_other:
                         if (!inventory_btn.getText().equals(getString(R.string.read_btn))) {
@@ -255,11 +249,22 @@ public class ReadFragmentTL extends Fragment {
                 case 0:
                     VoiceUtils.start();
                     tagList.clear();
+                    long totalScans = 0;
+                    long encodedSuccess = 0;
+                    long encodedFailures = 0;
                     synchronized (tagMap) {
-                        tagList.addAll(tagMap.values());
+                        for (TagInfo tag : tagMap.values()) {
+                            tagList.add(tag.copy());
+                            totalScans += tag.getScanCount();
+                            encodedSuccess += tag.getEncodedReadSuccessCount();
+                            encodedFailures += tag.getEncodedReadFailureCount();
+                        }
                     }
                     tagAdapter.notifyDataSetChanged();
-                    tagTotal.setText(tagMap.size() + "");
+                    tagTotal.setText(String.valueOf(totalScans));
+                    tagUnique.setText(String.valueOf(tagList.size()));
+                    tagEncodedSuccess.setText(String.valueOf(encodedSuccess));
+                    tagEncodedFailures.setText(String.valueOf(encodedFailures));
                     break;
                 case 1:
 //                    if (timer != null) {
@@ -321,21 +326,44 @@ public class ReadFragmentTL extends Fragment {
     }
 
     private void processTag(LogBaseTLInfo logBaseTLInfo) {
-        ScanBeep.play();
-        String key = logBaseTLInfo.getEpc();
-        if (tagMap.containsKey(key)) {
+        String epc = logBaseTLInfo.getEpc();
+        if (TextUtils.isEmpty(epc)) {
             return;
-        } else {
-            TagInfo tagInfo = new TagInfo();
-            tagInfo.setIndex(tagMap.size() + 1);
-            tagInfo.setType("TL");
-            tagInfo.setEpc(logBaseTLInfo.getEpc());
-            tagInfo.setTid(logBaseTLInfo.getTid());
-            tagInfo.setCount(1);
-            tagInfo.setReadTime(new Date());
-            tagMap.put(key, tagInfo);
         }
-        handler.sendEmptyMessage(0);
+        TagInfo observed = new TagInfo();
+        observed.setType("TL");
+        observed.setEpc(epc);
+        observed.setTid(logBaseTLInfo.getTid());
+        observed.setRssi(String.valueOf(logBaseTLInfo.getRssi()));
+        observed.setEncodedData(logBaseTLInfo.getTid());
+        observed.setEncodedDataBank("TID");
+        observed.setEncodedReadSuccess(!TextUtils.isEmpty(logBaseTLInfo.getTid()));
+        if (!observed.isEncodedReadSuccess()) {
+            observed.setEncodedReadError("TL reader did not return TID memory data");
+            Log.w("ReadFragmentTL", "Encoded data read failed for EPC " + epc);
+        }
+        long scannedAt = System.currentTimeMillis();
+        long generation = scanGeneration;
+        scanQueue.submit(() -> {
+            boolean newTag;
+            synchronized (tagMap) {
+                if (generation != scanGeneration) return;
+                TagInfo tag = tagMap.get(epc);
+                newTag = tag == null;
+                if (newTag) {
+                    tag = observed;
+                    tag.setIndex(tagMap.size() + 1);
+                    tag.recordScan(observed, scannedAt);
+                    tagMap.put(epc, tag);
+                } else {
+                    tag.recordScan(observed, scannedAt);
+                }
+            }
+            if (newTag) ScanBeep.play();
+            if (!handler.hasMessages(0)) {
+                handler.sendEmptyMessageDelayed(0, 100);
+            }
+        });
     }
 
     Timer timer;
@@ -440,9 +468,16 @@ public class ReadFragmentTL extends Fragment {
 
     @OnClick(R.id.inventory_clean)
     public void cleanEvent() {
-        tagMap.clear();
+        scanQueue.clearPending();
+        synchronized (tagMap) {
+            scanGeneration++;
+            tagMap.clear();
+        }
         tagList.clear();
         tagTotal.setText("0");
+        tagUnique.setText("0");
+        tagEncodedSuccess.setText("0");
+        tagEncodedFailures.setText("0");
         tagSpeed.setText("0t/s");
         tagReadTime.setText("0ms");
         time = 0;
@@ -468,6 +503,8 @@ public class ReadFragmentTL extends Fragment {
 
     @Override
     public void onDestroy() {
+        scanQueue.shutdown();
+        handler.removeCallbacksAndMessages(null);
         super.onDestroy();
         Log.e("onDestroy", "onDestroy");
     }

@@ -12,13 +12,21 @@
     <string name="user">User</string>
     <string name="reserved">Reserved</string>
     <string name="tag_count">Count</string>
+    <string name="encoded_data">Encoded Data</string>
+    <string name="rssi">RSSI</string>
+    <string name="first_scan">First</string>
+    <string name="last_scan">Last</string>
+    <string name="encoded_memory_bank">Encoded data bank:</string>
 
     <string name="read_btn">Start scan</string>
     <string name="stop_btn">Stop scan</string>
     <string name="clean_btn">Clear</string>
     <string name="inventory_heading">Live inventory</string>
     <string name="inventory_subtitle">Scan and verify RFID tags in real time</string>
-    <string name="inventory_total_label">UNIQUE TAGS</string>
+    <string name="inventory_total_label">TOTAL DETECTED</string>
+    <string name="inventory_unique_label">UNIQUE TAGS</string>
+    <string name="inventory_encoded_success_label">DATA READ</string>
+    <string name="inventory_encoded_failed_label">DATA FAILED</string>
     <string name="inventory_speed_label">READ RATE</string>
     <string name="inventory_time_label">SCAN TIME</string>
     <string name="inventory_filter_hint">Enter tag value</string>
@@ -166,6 +174,11 @@
     <string-array name="setting_tid">
         <item>Auto</item>
         <item>Fixed</item>
+    </string-array>
+    <string-array name="encoded_memory_banks">
+        <item>User memory (TID fallback)</item>
+        <item>TID memory</item>
+        <item>Reserved memory (TID fallback)</item>
     </string-array>
 
     <string-array name="setting_power">
