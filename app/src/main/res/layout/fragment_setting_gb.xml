@@ -160,7 +160,7 @@
                 android:id="@+id/set_tid_box"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="TID：" />
+                android:text="TID:" />
 
             <Spinner
                 android:id="@+id/set_tid_mode"
@@ -274,7 +274,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ant1："
+                android:text="Ant1:"
                 android:textSize="@dimen/text_size_16" />
 
             <Spinner

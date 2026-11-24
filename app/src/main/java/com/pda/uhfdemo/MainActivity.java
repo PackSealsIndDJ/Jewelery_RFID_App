@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setSupportActionBar(findViewById(R.id.toolbar));
-        LocalManageUtil.saveSelectLanguage(this, 0);
+        LocalManageUtil.saveSelectLanguage(this, 2);
         ButterKnife.bind(this);
         findViewById(R.id.open_scanner_tools).setOnClickListener(v ->
                 startActivity(new android.content.Intent(MainActivity.this, ScannerToolsActivity.class)));

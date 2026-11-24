@@ -29,20 +29,10 @@ public class LocalManageUtil {
             default:
                 return null;
         }
-
     }
 
     public static Locale getSetLanguageLocale(Context context) {
-        switch (SPUtil.getInstance(context).getSelectLanguage()) {
-            case 0:
-                return getSystemLocale(context);
-            case 1:
-                return Locale.CHINA;
-            case 2:
-                return Locale.ENGLISH;
-            default:
-                return Locale.ENGLISH;
-        }
+        return Locale.ENGLISH;
     }
 
     public static void saveSelectLanguage(Context context, int select) {

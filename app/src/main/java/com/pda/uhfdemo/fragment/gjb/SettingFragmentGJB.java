@@ -254,7 +254,7 @@ public class SettingFragmentGJB extends Fragment {
             TextView mei_text = inflate.findViewById(R.id.imei_text);
             DeviceManager deviceManager = new DeviceManager();
             String imei1 = deviceManager.getIMEI(1);
-            Log.i("TAG", "IMEI1：" + imei1);
+            Log.i("TAG", "IMEI1:" + imei1);
             mei_text.setText(imei1);
             imei_img.setImageBitmap(QrCodeUtils.getQrCode(imei1));
 

@@ -23,9 +23,9 @@
     <string name="inventory_time_label">SCAN TIME</string>
     <string name="inventory_filter_hint">Enter tag value</string>
 
-    <string name="tag_total">Total：</string>
-    <string name="tag_speed">Speed：</string>
-    <string name="tag_readTime">Time：</string>
+    <string name="tag_total">Total:</string>
+    <string name="tag_speed">Speed:</string>
+    <string name="tag_readTime">Time:</string>
 
     <string name="tag_match_area">Match:</string>
     <string name="tag_match_content">Content:</string>
@@ -59,18 +59,18 @@
     <string name="kill_pwd">KillPwd:</string>
     <string name="kill_btn">Kill</string>
     <string name="version_info_title">VersionInfo</string>
-    <string name="base_version">BaseVersion：</string>
-    <string name="base_compileTime">BaseCompile：</string>
-    <string name="serial_no">SerialNo：</string>
-    <string name="power_time">PowerTime：</string>
+    <string name="base_version">BaseVersion:</string>
+    <string name="base_compileTime">BaseCompile:</string>
+    <string name="serial_no">SerialNo:</string>
+    <string name="power_time">PowerTime:</string>
     <string name="query_btn">Query</string>
     <string name="read_setting_title">ReadSetting</string>
-    <string name="label_type">LabelType：</string>
+    <string name="label_type">LabelType:</string>
     <string name="tid_len">len</string>
-    <string name="read_userdata">UserData：</string>
+    <string name="read_userdata">UserData:</string>
     <string name="user_start">start</string>
     <string name="user_len">len</string>
-    <string name="read_reserved">Reserved：</string>
+    <string name="read_reserved">Reserved:</string>
     <string name="reserved_start">start</string>
     <string name="reserved_len">len</string>
     <string name="module_power">ModulePower</string>
@@ -211,9 +211,9 @@
         <item>2|Tari=25us,Miller4,LHF=300KHz</item>
         <item>3|Tari=6.25us,FM0,LHF=400KHz</item>
         <item>4|Tari=25us,Miller4,LHF=320KHz</item>
-        <item>5|Tari=6.25us，FM0，LHF=640KHz</item>
-        <item>6|Tari=20us，Miller4，LHF=320KHz</item>
-        <item>7|Tari=6.25us，Miller4，LHF=400KHz</item>
+        <item>5|Tari=6.25us,FM0,LHF=640KHz</item>
+        <item>6|Tari=20us,Miller4,LHF=320KHz</item>
+        <item>7|Tari=6.25us,Miller4,LHF=400KHz</item>
         <item>10|Tari=12.5us,Miller4,LHF=250KHz</item>
         <item>11|Tari=6.25us,Miller4,LHF=250KHz</item>
         <item>12|Tari=12.5us,Miller4,LHF=300KHz</item>
