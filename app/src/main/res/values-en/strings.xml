@@ -77,6 +77,7 @@
     <string name="bind_hint_4">Hint</string>
     <string name="bind_hint_5">Please confirm whether to clear all bound data?</string>
     <string name="bind_hint_6">confirm</string>
+    <string name="bind_hint_7">Cancel</string>
     <string name="find_hint_1">Failed to enable scanning</string>
     <string name="find_hint_2">Stop scanning failed</string>
     <string name="find_tag_status">Status</string>
