@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 
 import com.pda.uhfdemo.R;
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 import com.pda.uhfdemo.utils.CsvExportManager;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public abstract class CsvExportFragment extends Fragment {
                 if (granted && export != null) {
                     startExport(export);
                 } else {
-                    exportInProgress = false;
+                    setExportInProgress(false);
                     if (isAdded()) {
                         Toast.makeText(requireContext(), R.string.export_permission_denied,
                                 Toast.LENGTH_LONG).show();
@@ -60,9 +61,22 @@ public abstract class CsvExportFragment extends Fragment {
                 requireContext(), records, foundStatus, exportCallback()));
     }
 
+    protected final void exportInventoryDataToCsv(List<TagInfo> records) {
+        if (records == null || records.isEmpty()) {
+            showNoData();
+            return;
+        }
+        runWithStoragePermission(() -> CsvExportManager.exportInventoryDataToCsv(
+                requireContext(), records, exportCallback()));
+    }
+
+    protected final boolean isCsvExportInProgress() {
+        return exportInProgress;
+    }
+
     private void runWithStoragePermission(Runnable export) {
         if (exportInProgress) return;
-        exportInProgress = true;
+        setExportInProgress(true);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
                 && ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 != android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -78,12 +92,19 @@ public abstract class CsvExportFragment extends Fragment {
         export.run();
     }
 
+    private void setExportInProgress(boolean inProgress) {
+        exportInProgress = inProgress;
+        if (getActivity() != null) {
+            getActivity().invalidateOptionsMenu();
+        }
+    }
+
     private CsvExportManager.Callback exportCallback() {
         return new CsvExportManager.Callback() {
             @Override
             public void onSuccess(CsvExportManager.ExportedFile file, int recordCount) {
                 dismissProgress();
-                exportInProgress = false;
+                setExportInProgress(false);
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(), R.string.export_success, Toast.LENGTH_SHORT).show();
                 showExportActions(file, recordCount);
@@ -92,7 +113,7 @@ public abstract class CsvExportFragment extends Fragment {
             @Override
             public void onError(Exception error) {
                 dismissProgress();
-                exportInProgress = false;
+                setExportInProgress(false);
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(), R.string.export_failed, Toast.LENGTH_LONG).show();
             }

@@ -35,7 +35,7 @@
     <string name="goods_table_title">goods</string>
     <string name="clear_bind">ClearBind</string>
     <string name="export_csv">Export CSV</string>
-    <string name="export_no_data">No data to export</string>
+    <string name="export_no_data">No Data Available To Export</string>
     <string name="export_success">CSV exported successfully.</string>
     <string name="export_failed">CSV export failed. Check storage availability and try again.</string>
     <string name="export_permission_denied">Storage permission is required to export CSV files.</string>

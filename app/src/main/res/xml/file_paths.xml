@@ -2,5 +2,5 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-path
         name="csv_exports"
-        path="Download/PackSealsUHF_G2/" />
+        path="Download/PacksealsUHFG2/Exports/" />
 </paths>

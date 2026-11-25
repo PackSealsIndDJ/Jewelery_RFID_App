@@ -3,6 +3,7 @@ package com.pda.uhfdemo.utils;
 import org.junit.Test;
 
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -18,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 public class CsvExportManagerTest {
     @Test
-    public void writesExcelCompatibleUtf8CsvWithEscapedValuesAndFooter() throws Exception {
+    public void writesExcelCompatibleUtf8CsvWithEscapedValuesAndAlignedFooter() throws Exception {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         CsvExportManager.writeCsv(output, new String[]{"EPC", "TIP", "Status"},
@@ -27,9 +28,28 @@ public class CsvExportManagerTest {
 
         assertEquals("\uFEFFEPC,TIP,Status\r\n"
                         + "tag-1,\"Café, \"\"ring\"\"\",\r\n"
-                        + "Export Time,2026-11-18 12:34:56\r\n"
-                        + "Total Records,1\r\n",
+                        + "Export Time,2026-11-18 12:34:56,\r\n"
+                        + "Total Records,1,\r\n",
                 new String(output.toByteArray(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void inventoryRowsIncludeAllDisplayedFieldsAndPreserveEmptyValues() {
+        TagInfo tag = new TagInfo();
+        tag.setIndex(3);
+        tag.setType("6C");
+        tag.setEpc("epc-1");
+        tag.setTid("tid,1");
+        tag.setUserData("gold \"ring\"");
+        tag.setCount(2);
+
+        List<String[]> rows = CsvExportManager.buildInventoryRows(
+                Arrays.asList(tag, null));
+
+        assertEquals(1, rows.size());
+        assertEquals(8, rows.get(0).length);
+        assertEquals(Arrays.asList("3", "6C", "epc-1", "tid,1", "gold \"ring\"", "", "2", ""),
+                Arrays.asList(rows.get(0)));
     }
 
     @Test

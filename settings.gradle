@@ -27,5 +27,5 @@ dependencyResolutionManagement {
         maven { url 'https://maven.aliyun.com/repository/jcenter' }
     }
 }
-rootProject.name = "UHFReaderDemo_LC"
+rootProject.name = "PacksealsUHFDemo_LC"
 include ':app'
