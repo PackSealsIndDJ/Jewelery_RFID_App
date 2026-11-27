@@ -52,6 +52,7 @@ import com.pda.uhfdemo.adapter.TagAdapter;
 import com.pda.uhfdemo.entity.TagInfo;
 import com.pda.uhfdemo.fragment.CsvExportFragment;
 import com.pda.uhfdemo.utils.GlobalClient;
+import com.pda.uhfdemo.utils.InventoryListExpansion;
 import com.pda.uhfdemo.utils.Toast;
 import com.pda.uhfdemo.utils.VoiceUtils;
 import com.tencent.mmkv.MMKV;
@@ -79,6 +80,8 @@ import butterknife.OnClick;
 
 public class ReadFragmentGJB extends CsvExportFragment {
 
+    private static final String STATE_INVENTORY_LIST_EXPANDED = "inventory_list_expanded";
+
     @BindView(R.id.inventory_btn)
     Button inventory_btn;
     @BindView(R.id.read_listView)
@@ -89,6 +92,8 @@ public class ReadFragmentGJB extends CsvExportFragment {
     TextView tagSpeed;
     @BindView(R.id.tagReadTime)
     TextView tagReadTime;
+    @BindView(R.id.tagDisplaySummary)
+    TextView tagDisplaySummary;
 
     @BindView(R.id.match_read_area)
     Spinner match_read_area;
@@ -122,8 +127,41 @@ public class ReadFragmentGJB extends CsvExportFragment {
         view.setFocusableInTouchMode(true);
         VoiceUtils.init(getContext());
         initAdapter();
+        if (savedInstanceState != null) {
+            inventoryListExpanded = savedInstanceState.getBoolean(
+                    STATE_INVENTORY_LIST_EXPANDED, inventoryListExpanded);
+        }
+        InventoryListExpansion.apply(view, inventoryListExpanded, false);
+        tagTotal.setText(String.valueOf(tagMap.size()));
+        updateTagDisplaySummary();
         Log.e("ReadFragment", "ReadFragment");
         return view;
+    }
+
+    private boolean inventoryListExpanded;
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(STATE_INVENTORY_LIST_EXPANDED, inventoryListExpanded);
+    }
+
+    @OnClick(R.id.inventory_expand_button)
+    public void toggleInventoryList() {
+        inventoryListExpanded = !inventoryListExpanded;
+        View view = getView();
+        if (view != null) {
+            InventoryListExpansion.apply(view, inventoryListExpanded, true);
+        }
+    }
+
+    private void updateTagDisplaySummary() {
+        CharSequence summary = getString(
+                R.string.inventory_tag_display_summary,
+                tagMap.size(), InventoryListExpansion.getVisibleItemCount(listView));
+        if (!summary.equals(tagDisplaySummary.getText())) {
+            tagDisplaySummary.setText(summary);
+        }
     }
 
     @Override
@@ -200,6 +238,21 @@ public class ReadFragmentGJB extends CsvExportFragment {
         listView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
         listView.setLayoutManager(layoutManager);
         listView.setAdapter(tagAdapter);
+        listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                updateTagDisplaySummary();
+            }
+        });
+        listView.addOnLayoutChangeListener((view, left, top, right, bottom,
+                                            oldLeft, oldTop, oldRight, oldBottom) ->
+                updateTagDisplaySummary());
+        tagAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                listView.post(() -> updateTagDisplaySummary());
+            }
+        });
         tagAdapter.setOnItemClickListener((adapter, view, position) -> {
             if (clickView != null && view != clickView) {
                 clickView.setBackgroundColor(Color.WHITE);
@@ -260,6 +313,7 @@ public class ReadFragmentGJB extends CsvExportFragment {
                     }
                     tagAdapter.notifyDataSetChanged();
                     tagTotal.setText(tagMap.size() + "");
+                    updateTagDisplaySummary();
                     break;
                 case 1:
 //                    if (timer != null) {
@@ -470,6 +524,7 @@ public class ReadFragmentGJB extends CsvExportFragment {
         tagMap.clear();
         tagList.clear();
         tagTotal.setText("0");
+        updateTagDisplaySummary();
         tagSpeed.setText("0t/s");
         tagReadTime.setText("0ms");
         time = 0;

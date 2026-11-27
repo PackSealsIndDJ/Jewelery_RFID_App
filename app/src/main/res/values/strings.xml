@@ -22,6 +22,10 @@
     <string name="inventory_speed_label">READ RATE</string>
     <string name="inventory_time_label">SCAN TIME</string>
     <string name="inventory_filter_hint">Enter tag value</string>
+    <string name="inventory_tag_display_summary">Total Tags Scanned: %1$d\nDisplayed Tags: %2$d</string>
+    <string name="inventory_tag_display_summary_initial">Total Tags Scanned: 0\nDisplayed Tags: 0</string>
+    <string name="inventory_expand_list">Expand EPC tag list</string>
+    <string name="inventory_collapse_list">Collapse EPC tag list</string>
 
     <string name="tag_total">Total:</string>
     <string name="tag_speed">Speed:</string>

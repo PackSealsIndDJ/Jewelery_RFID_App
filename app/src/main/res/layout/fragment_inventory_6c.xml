@@ -92,6 +92,7 @@
         android:paddingBottom="4dp" />
 
     <LinearLayout
+        android:id="@+id/inventory_filter_panel"
         android:layout_width="match_parent"
         android:layout_height="64dp"
         android:layout_marginStart="12dp"
