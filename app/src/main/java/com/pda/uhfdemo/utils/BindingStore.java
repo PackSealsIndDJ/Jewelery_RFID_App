@@ -54,7 +54,7 @@ public final class BindingStore {
     }
 
     public static synchronized boolean save(String id, String name, String tid) {
-        if (id == null || id.isEmpty() || name == null) {
+        if (id == null || id.isEmpty() || name == null || contains(id)) {
             return false;
         }
         long boundAt = System.currentTimeMillis();
@@ -71,6 +71,29 @@ public final class BindingStore {
             return false;
         }
         return true;
+    }
+
+    public static synchronized boolean update(String id, String name) {
+        if (id == null || id.isEmpty() || name == null || !contains(id)) {
+            return false;
+        }
+        return STORE.encode(PREFIX + id, name);
+    }
+
+    public static synchronized boolean delete(String id) {
+        if (id == null || id.isEmpty() || !contains(id)) {
+            return false;
+        }
+        STORE.remove(PREFIX + id);
+        STORE.remove(META_TID_PREFIX + id);
+        STORE.remove(META_TIME_PREFIX + id);
+        if (isLegacyTagId(id)) {
+            STORE.remove(id);
+        }
+        return !STORE.containsKey(PREFIX + id)
+                && !STORE.containsKey(META_TID_PREFIX + id)
+                && !STORE.containsKey(META_TIME_PREFIX + id)
+                && (!isLegacyTagId(id) || !STORE.containsKey(id));
     }
 
     public static synchronized boolean removeAll() {

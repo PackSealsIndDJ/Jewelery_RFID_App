@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
 import com.coder.zzq.smartshow.dialog.DialogBtnClickListener;
 import com.coder.zzq.smartshow.dialog.EnsureDialog;
 import com.coder.zzq.smartshow.dialog.SmartDialog;
@@ -75,6 +76,17 @@ public class BindFragmentGJB extends CsvExportFragment {
         }
         bindInfoList.addAll(bindMap.values());
         bindAdapter = new BindAdapter(bindInfoList);
+        bindAdapter.setOnBindingActionListener(new BindAdapter.OnBindingActionListener() {
+            @Override
+            public void onEdit(BindInfo binding) {
+                editBinding(binding);
+            }
+
+            @Override
+            public void onDelete(BindInfo binding) {
+                confirmDeleteBinding(binding);
+            }
+        });
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         bindListView.addItemDecoration(new DividerItemDecoration(getContext(), 1));
@@ -97,10 +109,23 @@ public class BindFragmentGJB extends CsvExportFragment {
         }
         scannedIds.clear();
         scannedIds.addAll(ids);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, new ArrayList<>(ids));
-//        Adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        bind_epc.setAdapter(adapter);
+        updateTagSpinner(false);
         updateCounts();
+    }
+
+    private void updateTagSpinner(boolean clearSelection) {
+        List<String> availableIds = new ArrayList<>();
+        for (String id : scannedIds) {
+            if (!BindingStore.contains(id)) {
+                availableIds.add(id);
+            }
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_item, availableIds);
+        bind_epc.setAdapter(adapter);
+        if (clearSelection) {
+            bind_epc.setSelection(-1);
+        }
     }
 
     public void selectData(int position) {
@@ -134,9 +159,59 @@ public class BindFragmentGJB extends CsvExportFragment {
         bindInfoList.clear();
         bindInfoList.addAll(bindMap.values());
         bindAdapter.notifyDataSetChanged();
+        updateTagSpinner(true);
         updateCounts();
         updateExportButton();
-        Toast.show(getString(R.string.bind_hint_3));
+        Toast.show(getString(R.string.bind_success_details, epc, name));
+    }
+
+    private void editBinding(BindInfo binding) {
+        EditText nameInput = new EditText(requireContext());
+        nameInput.setSingleLine(true);
+        nameInput.setHint(R.string.bind_goods_name);
+        nameInput.setText(binding.getName());
+        nameInput.setSelection(nameInput.length());
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.bind_edit)
+                .setView(nameInput)
+                .setPositiveButton(R.string.bind_update, (dialog, which) -> {
+                    String updatedName = nameInput.getText().toString().trim();
+                    if (StringUtils.isNullOfEmpty(updatedName)) {
+                        Toast.show(getString(R.string.bind_hint_2));
+                        return;
+                    }
+                    if (!BindingStore.update(binding.getEpc(), updatedName)) {
+                        Toast.show(getString(R.string.bind_save_error));
+                        return;
+                    }
+                    binding.setName(updatedName);
+                    bindAdapter.notifyDataSetChanged();
+                    updateCounts();
+                    Toast.show(getString(R.string.bind_update_success));
+                })
+                .setNegativeButton(R.string.bind_cancel, null)
+                .show();
+    }
+
+    private void confirmDeleteBinding(BindInfo binding) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle(R.string.bind_delete)
+                .setMessage(getString(R.string.bind_delete_confirm, binding.getEpc(), binding.getName()))
+                .setPositiveButton(R.string.bind_delete, (dialog, which) -> {
+                    if (!BindingStore.delete(binding.getEpc())) {
+                        Toast.show(getString(R.string.bind_save_error));
+                        return;
+                    }
+                    bindMap.remove(binding.getEpc());
+                    bindInfoList.remove(binding);
+                    bindAdapter.notifyDataSetChanged();
+                    updateTagSpinner(false);
+                    updateCounts();
+                    updateExportButton();
+                    Toast.show(getString(R.string.bind_delete_success));
+                })
+                .setNegativeButton(R.string.bind_cancel, null)
+                .show();
     }
 
     private void updateExportButton() {
@@ -182,6 +257,8 @@ public class BindFragmentGJB extends CsvExportFragment {
                 bindInfoList.clear();
                 bindMap.clear();
                 bindAdapter.notifyDataSetChanged();
+                updateTagSpinner(false);
+                updateCounts();
                 updateExportButton();
                 dialog.dismiss();
             }

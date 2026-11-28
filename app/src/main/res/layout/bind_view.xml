@@ -19,4 +19,20 @@
         android:textSize="@dimen/text_size_16"
         android:layout_height="wrap_content"/>
 
+    <ImageButton
+        android:id="@+id/bind_item_edit"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/bind_edit"
+        android:src="@android:drawable/ic_menu_edit" />
+
+    <ImageButton
+        android:id="@+id/bind_item_delete"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/bind_delete"
+        android:src="@android:drawable/ic_menu_delete" />
+
 </LinearLayout>

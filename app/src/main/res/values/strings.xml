@@ -110,6 +110,15 @@
     <string name="bind_total_count">Total bound: %1$d</string>
     <string name="bind_duplicate_error">This tag is already bound</string>
     <string name="bind_save_error">Could not save this binding</string>
+    <string name="bind_edit">Edit binding</string>
+    <string name="bind_delete">Delete binding</string>
+    <string name="bind_goods_name">Goods name</string>
+    <string name="bind_update">Update</string>
+    <string name="bind_cancel">Cancel</string>
+    <string name="bind_delete_confirm">Delete binding for %1$s (%2$s)?</string>
+    <string name="bind_update_success">Binding updated</string>
+    <string name="bind_delete_success">Binding deleted</string>
+    <string name="bind_success_details">Binding successful\nEPC: %1$s\nGoods: %2$s\nSelected EPC cleared. Ready for next scan.</string>
     <string name="bind_tag_id_header">Tag ID / EPC</string>
     <string name="setting_hint_1">Time cannot be empty</string>
     <string name="write_hint_1">mismatching</string>

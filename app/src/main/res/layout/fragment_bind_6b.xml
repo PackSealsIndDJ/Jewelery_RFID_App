@@ -117,6 +117,22 @@
             android:layout_weight="1"
             android:text="@string/goods_table_title"
             android:textAlignment="center" />
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/layer"
+            android:text="@string/bind_edit"
+            android:textAlignment="center"
+            android:textSize="10sp" />
+
+        <TextView
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/layer"
+            android:text="@string/bind_delete"
+            android:textAlignment="center"
+            android:textSize="10sp" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
