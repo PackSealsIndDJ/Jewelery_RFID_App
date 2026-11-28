@@ -104,6 +104,8 @@
             android:layout_height="wrap_content"
             android:background="@drawable/layer"
             android:layout_weight="2"
+            android:minHeight="48dp"
+            android:gravity="center"
             android:textSize="@dimen/text_size_16"
             android:text="TID"
             android:textAlignment="center" />
@@ -115,23 +117,29 @@
             android:background="@drawable/layer"
             android:textSize="@dimen/text_size_16"
             android:layout_weight="1"
+            android:minHeight="48dp"
+            android:gravity="center"
             android:text="@string/goods_table_title"
             android:textAlignment="center" />
 
         <TextView
-            android:layout_width="40dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/layer"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:minHeight="48dp"
             android:text="@string/bind_edit"
-            android:textAlignment="center"
             android:textSize="10sp" />
 
         <TextView
-            android:layout_width="40dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:background="@drawable/layer"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:minHeight="48dp"
             android:text="@string/bind_delete"
-            android:textAlignment="center"
             android:textSize="10sp" />
     </LinearLayout>
 

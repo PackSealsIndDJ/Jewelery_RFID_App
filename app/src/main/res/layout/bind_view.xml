@@ -2,35 +2,51 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:minHeight="48dp">
 
     <TextView
         android:id="@+id/bind_item_epc"
         android:layout_width="0dp"
         android:layout_weight="2"
         android:textSize="@dimen/text_size_16"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="4dp"
+        android:maxLines="1"
+        android:ellipsize="end" />
 
     <TextView
         android:id="@+id/bind_item_name"
         android:layout_width="0dp"
         android:layout_weight="1"
-        android:textAlignment="center"
         android:textSize="@dimen/text_size_16"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:gravity="center"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:maxLines="1"
+        android:ellipsize="end" />
 
     <ImageButton
         android:id="@+id/bind_item_edit"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/bind_edit"
         android:src="@android:drawable/ic_menu_edit" />
 
     <ImageButton
         android:id="@+id/bind_item_delete"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/bind_delete"
         android:src="@android:drawable/ic_menu_delete" />

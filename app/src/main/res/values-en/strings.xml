@@ -98,8 +98,8 @@
     <string name="bind_total_count">Total bound: %1$d</string>
     <string name="bind_duplicate_error">This tag is already bound</string>
     <string name="bind_save_error">Could not save this binding</string>
-    <string name="bind_edit">Edit binding</string>
-    <string name="bind_delete">Delete binding</string>
+    <string name="bind_edit">Edit</string>
+    <string name="bind_delete">Delete</string>
     <string name="bind_goods_name">Goods name</string>
     <string name="bind_update">Update</string>
     <string name="bind_cancel">Cancel</string>
