@@ -3,6 +3,7 @@ package com.pda.uhfdemo.utils;
 import org.junit.Test;
 
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -68,6 +69,26 @@ public class CsvExportManagerTest {
                 Arrays.asList(rows.get(0)).subList(0, 4));
         assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
                 .format(new Date(1_700_000_001_000L)), rows.get(0)[4]);
+    }
+
+    @Test
+    public void tagRowsIncludeInventoryFieldsAndFormatReadTime() {
+        TagInfo tag = new TagInfo();
+        tag.setIndex(3);
+        tag.setType("UHF");
+        tag.setEpc("epc-3");
+        tag.setTid("tid-3");
+        tag.setUserData("data, \"quoted\"");
+        tag.setReserved("reserved");
+        tag.setCount(5);
+        tag.setReadTime(new Date(1_700_000_000_000L));
+
+        List<String[]> rows = CsvExportManager.buildTagRows(Collections.singletonList(tag));
+
+        assertEquals(Arrays.asList("3", "UHF", "epc-3", "tid-3", "data, \"quoted\"",
+                "reserved", "5"),
+                Arrays.asList(rows.get(0)).subList(0, 7));
+        assertTrue(rows.get(0)[7].matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"));
     }
 
     private BindInfo foundTag(String epc, String goods, long rssi, int scanCount, long lastSeen) {

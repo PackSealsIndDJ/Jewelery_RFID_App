@@ -14,6 +14,7 @@ import android.util.Log;
 import androidx.core.content.FileProvider;
 
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -39,6 +40,8 @@ public final class CsvExportManager {
             {"New", "EPC", "Goods", "Total bound", "Date Time"};
     private static final String[] FIND_HEADERS =
             {"EPC", "Goods", "RSSI", "Status", "Last Seen Time"};
+    private static final String[] TAG_HEADERS =
+            {"Index", "Type", "EPC", "TID", "UserData", "Reserved", "TotalCount", "ReadTime"};
     private static final ExecutorService EXPORT_EXECUTOR =
             Executors.newSingleThreadExecutor(runnable -> new Thread(runnable, "csv-export"));
 
@@ -67,14 +70,22 @@ public final class CsvExportManager {
                                            Callback callback) {
         List<BindInfo> snapshot = snapshot(records);
         String fileName = "Bind_Report_" + fileTimestamp() + ".csv";
-        executeExport(context, fileName, BIND_HEADERS, snapshot, null, false, callback);
+        executeExport(context, fileName, BIND_HEADERS, () -> buildBindRows(snapshot), callback);
     }
 
     public static void exportFindDataToCsv(Context context, List<BindInfo> records,
                                            String foundStatus, Callback callback) {
         List<BindInfo> snapshot = snapshot(records);
         String fileName = "Find_Report_" + fileTimestamp() + ".csv";
-        executeExport(context, fileName, FIND_HEADERS, snapshot, foundStatus, true, callback);
+        executeExport(context, fileName, FIND_HEADERS,
+                () -> buildFindRows(snapshot, foundStatus), callback);
+    }
+
+    public static void exportTagDataToCsv(Context context, List<TagInfo> records,
+                                          Callback callback) {
+        List<TagInfo> snapshot = snapshotTags(records);
+        String fileName = "Tag_Report_" + fileTimestamp() + ".csv";
+        executeExport(context, fileName, TAG_HEADERS, () -> buildTagRows(snapshot), callback);
     }
 
     public static void writeCsvHeaders(Writer writer, String[] headers) throws IOException {
@@ -102,8 +113,7 @@ public final class CsvExportManager {
     }
 
     private static void executeExport(Context context, String fileName, String[] headers,
-                                      List<BindInfo> records, String foundStatus,
-                                      boolean findExport, Callback callback) {
+                                      RowsProvider rowsProvider, Callback callback) {
         if (context == null || callback == null) {
             throw new IllegalArgumentException("Context and callback are required.");
         }
@@ -112,9 +122,7 @@ public final class CsvExportManager {
             CsvDestination destination = null;
             boolean committed = false;
             try {
-                List<String[]> rows = findExport
-                        ? buildFindRows(records, foundStatus)
-                        : buildBindRows(records);
+                List<String[]> rows = rowsProvider.build();
                 if (rows.isEmpty()) {
                     throw new IOException("No records to export.");
                 }
@@ -231,6 +239,26 @@ public final class CsvExportManager {
         return rows;
     }
 
+    static List<String[]> buildTagRows(List<TagInfo> records) {
+        List<String[]> rows = new ArrayList<>(records.size());
+        for (TagInfo record : records) {
+            if (record == null) {
+                continue;
+            }
+            rows.add(new String[]{
+                    record.getIndex() == null ? "" : String.valueOf(record.getIndex()),
+                    record.getType(),
+                    record.getEpc(),
+                    record.getTid(),
+                    record.getUserData(),
+                    record.getReserved(),
+                    record.getCount() == null ? "" : String.valueOf(record.getCount()),
+                    record.getReadTime() == null ? "" : dateTime(record.getReadTime().getTime())
+            });
+        }
+        return rows;
+    }
+
     private static List<BindInfo> snapshot(List<BindInfo> records) {
         List<BindInfo> snapshot = new ArrayList<>(records.size());
         for (BindInfo record : records) {
@@ -239,6 +267,33 @@ public final class CsvExportManager {
             }
         }
         return snapshot;
+    }
+
+    private static List<TagInfo> snapshotTags(List<TagInfo> records) {
+        if (records == null) {
+            return new ArrayList<>();
+        }
+        List<TagInfo> snapshot = new ArrayList<>(records.size());
+        for (TagInfo record : records) {
+            if (record != null) {
+                TagInfo copy = new TagInfo();
+                copy.setIndex(record.getIndex());
+                copy.setType(record.getType());
+                copy.setEpc(record.getEpc());
+                copy.setTid(record.getTid());
+                copy.setUserData(record.getUserData());
+                copy.setReserved(record.getReserved());
+                copy.setCount(record.getCount());
+                copy.setReadTime(record.getReadTime() == null
+                        ? null : new java.util.Date(record.getReadTime().getTime()));
+                snapshot.add(copy);
+            }
+        }
+        return snapshot;
+    }
+
+    private interface RowsProvider {
+        List<String[]> build();
     }
 
     private static void writeCsvRow(Writer writer, String[] values) throws IOException {

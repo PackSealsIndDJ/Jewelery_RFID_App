@@ -12,7 +12,6 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -33,14 +32,12 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
-import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.coder.zzq.smartshow.dialog.ChooseListDialog;
 import com.coder.zzq.smartshow.dialog.ChooseResult;
-import com.coder.zzq.smartshow.toast.SmartToast;
 import com.gg.reader.api.dal.GClient;
 import com.gg.reader.api.dal.HandlerDebugLog;
 import com.gg.reader.api.dal.HandlerTagTLLog;
@@ -58,13 +55,12 @@ import com.pda.uhfdemo.UpgradeActivity;
 import com.pda.uhfdemo.adapter.TagAdapter;
 import com.pda.uhfdemo.entity.TagInfo;
 import com.pda.uhfdemo.fragment.sixc.BindFragment6c;
-import com.pda.uhfdemo.utils.ExcelUtil;
+import com.pda.uhfdemo.fragment.CsvExportFragment;
 import com.pda.uhfdemo.utils.GlobalClient;
 import com.pda.uhfdemo.utils.Toast;
 import com.pda.uhfdemo.utils.VoiceUtils;
 import com.tencent.mmkv.MMKV;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -77,7 +73,7 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-public class ReadFragmentTL extends Fragment {
+public class ReadFragmentTL extends CsvExportFragment {
 
     @BindView(R.id.inventory_btn)
     Button inventory_btn;
@@ -138,21 +134,7 @@ public class ReadFragmentTL extends Fragment {
             public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
                 switch (menuItem.getItemId()) {
                     case R.id.menu_export:
-                        String filePath = Environment.getExternalStorageDirectory() + "/Download/";
-                        String fileName = "Tag_" + new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date()) + ".xls";
-                        String[] title = {"Index", "Type", "EPC", "TID", "UserData", "Reserved", "TotalCount", "ReadTime"};
-                        if (tagList.size() > 0) {
-                            try {
-                                ExcelUtil.initExcel(filePath, fileName, title);
-                                ExcelUtil.writeObjListToExcel(ExcelUtil.getRecordData(tagList), filePath + fileName);
-                                SmartToast.show("Export success " + "Path=" + filePath + fileName);
-                            } catch (Exception ex) {
-                                SmartToast.show("Export Failed");
-                                ex.printStackTrace();
-                            }
-                        } else {
-                            SmartToast.show("No Data");
-                        }
+                        exportTagDataToCsv(tagList);
                         break;
                     case R.id.menu_other:
                         if (!inventory_btn.getText().equals(getString(R.string.read_btn))) {

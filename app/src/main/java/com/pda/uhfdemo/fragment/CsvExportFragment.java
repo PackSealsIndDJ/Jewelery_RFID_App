@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 
 import com.pda.uhfdemo.R;
 import com.pda.uhfdemo.entity.BindInfo;
+import com.pda.uhfdemo.entity.TagInfo;
 import com.pda.uhfdemo.utils.CsvExportManager;
 
 import java.util.List;
@@ -58,6 +59,15 @@ public abstract class CsvExportFragment extends Fragment {
         }
         runWithStoragePermission(() -> CsvExportManager.exportFindDataToCsv(
                 requireContext(), records, foundStatus, exportCallback()));
+    }
+
+    protected final void exportTagDataToCsv(List<TagInfo> records) {
+        if (records == null || records.isEmpty()) {
+            showNoData();
+            return;
+        }
+        runWithStoragePermission(() -> CsvExportManager.exportTagDataToCsv(
+                requireContext(), records, exportCallback()));
     }
 
     private void runWithStoragePermission(Runnable export) {
