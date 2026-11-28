@@ -247,6 +247,7 @@ public class BindFragment6b extends CsvExportFragment {
         EnsureDialog ensureDialog = new EnsureDialog();
         ensureDialog.title(getString(R.string.bind_hint_4));
         ensureDialog.message(getString(R.string.bind_hint_5));
+        ensureDialog.cancelBtn(getString(R.string.bind_hint_7), (dialog, which, data) -> dialog.dismiss());
         ensureDialog.confirmBtn(getString(R.string.bind_hint_6), new DialogBtnClickListener() {
             @Override
             public void onBtnClick(SmartDialog dialog, int which, Object data) {
